@@ -1,40 +1,36 @@
-//! A platform-agnostic, embedded-hal driver for XXX.
+//! A platform-agnostic, embedded-hal driver for FS3000 airflow sensors, either directly or via a [Sparkfun breakout board](https://www.sparkfun.com/products/18768).
 #![no_std]
-
+#[deny(missing_docs)]
+mod address;
+pub use address::DeviceAddr;
+mod protocol;
 mod types;
+
+use protocol::Packet;
 pub use types::{DeviceType, FS3000_1005, FS3000_1015};
 
+/// Public module with all helpful types.
 pub mod prelude {
-    pub use crate::types::{DeviceType, FS3000_1005, FS3000_1015};
+    pub use crate::types::{FS3000_1005, FS3000_1015};
     pub use crate::{DeviceAddr, FS3000};
 }
 
-/// The I2C address of the FS3000.
-#[derive(Copy, Clone, Debug, Default)]
-pub enum DeviceAddr {
-    /// The default address, 0x28.
-    #[default]
-    Default,
-    /// Any other I2C address, e.g. when using a mux.
-    Custom(u8),
+#[derive(Debug, thiserror::Error)]
+pub enum Error<I2CError> {
+    #[error("Checksum validation failed")]
+    ChecksumFailed,
+
+    #[error("I2C Error: {0:?}")]
+    I2C(I2CError),
 }
 
-impl From<DeviceAddr> for u8 {
-    fn from(addr: DeviceAddr) -> u8 {
-        match addr {
-            DeviceAddr::Default => 0x28,
-            DeviceAddr::Custom(addr) => addr,
-        }
-    }
-}
-
-pub struct FS3000<I2C, State: DeviceType> {
+pub struct FS3000<Device: DeviceType, I2C> {
     address: DeviceAddr,
     i2c: I2C,
-    _state: core::marker::PhantomData<State>,
+    _state: core::marker::PhantomData<Device>,
 }
 
-impl<I2C, State: DeviceType> FS3000<I2C, State>
+impl<Device: DeviceType, I2C> FS3000<Device, I2C>
 where
     I2C: embedded_hal::i2c::I2c,
 {
@@ -47,16 +43,32 @@ where
         }
     }
 
+    /// Check whether the FS3000 device is reachable.
     pub fn connected(&mut self) -> Result<(), I2C::Error> {
         self.i2c.transaction(self.address.into(), &mut [])
     }
 
-    pub fn read_meters_per_second(&mut self) -> Result<f32, I2C::Error> {
-        let mut packet = Packet([0; 5]);
-        self.i2c.read(self.address.into(), &mut packet.0)?;
+    /// Fetch a single, meters-per-second airflow measurement from the device.
+    pub fn read_meters_per_second(&mut self) -> Result<f32, Error<I2C::Error>> {
+        let measurement = self.read_raw()?;
+        Ok(protocol::raw_to_meters_per_second::<Device>(measurement))
+    }
 
-        todo!()
+    /// Fetch a single, raw measurement from the device.
+    ///
+    /// The measurement must be translated to a real unit for usage, consult
+    /// the datasheet for details. Otherwise, use [`FS3000::read_meters_per_second`] to have
+    /// this conversion be handled for you.
+    pub fn read_raw(&mut self) -> Result<u16, Error<I2C::Error>> {
+        let mut packet = Packet([0; 5]);
+        self.i2c
+            .read(self.address.into(), &mut packet.0)
+            .map_err(Error::<I2C::Error>::I2C)?;
+
+        if !packet.valid() {
+            return Err(Error::ChecksumFailed);
+        }
+
+        Ok(packet.measurement())
     }
 }
-
-struct Packet([u8; 5]);

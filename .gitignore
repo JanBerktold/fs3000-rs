@@ -1,1 +1,4 @@
 /target
+
+# there's no point checking in a Cargo.lock file for a library.
+Cargo.lock
