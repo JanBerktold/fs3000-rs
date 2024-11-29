@@ -17,5 +17,5 @@ anyhow = "1"
 tokio-test = "0.4.4"
 
 # Local fork to add aarch64 support
-[patch.crates-io]
-libftd2xx-ffi = { path = "../libftd2xx-ffi" }
+# [patch.crates-io]
+# libftd2xx-ffi = { path = "../libftd2xx-ffi" }
