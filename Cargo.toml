@@ -1,5 +1,6 @@
 [package]
 name = "fs3000-rs"
+description = "A platform-agnostic, embedded-hal driver for FS3000 airflow sensors."
 version = "0.1.0"
 edition = "2021"
 repository = "https://github.com/JanBerktold/fs3000-rs"
