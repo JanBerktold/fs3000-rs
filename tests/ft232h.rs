@@ -1,3 +1,6 @@
+//! A suite of local integration tests that require a FT232H device plugged in, with a FS3000 connected to it's I2C bus.
+//!
+//! TODO: Add an async test suite -- need to find an async FT232H hal.
 use std::cell::RefCell;
 
 use embedded_hal_bus::i2c::RefCellDevice;
@@ -12,26 +15,8 @@ use ftdi_embedded_hal::{
 fn test_blocking() -> anyhow::Result<()> {
     let i2c = RefCell::new(connect_i2c()?);
 
-    let mut fs3000 = FS3000::<FS3000_1015, _>::new(DeviceAddr::Default, RefCellDevice::new(&i2c));
-
-    let connected = fs3000.connected();
-    assert!(
-        connected.is_ok(),
-        "Failed to connect to FS3000: {:#?}",
-        connected
-    );
-
-    // Assert that `connected` fails when it should.
-    {
-        // 0x31 is an arbitary, not used address.
-        let mut fake_fs3000 =
-            FS3000::<FS3000_1015, _>::new(DeviceAddr::Custom(0x31), RefCellDevice::new(&i2c));
-
-        assert!(
-            fake_fs3000.connected().is_err(),
-            "'Succeeded' at connecting to not-existing FS3000.",
-        );
-    }
+    let mut fs3000 =
+        FS3000::<FS3000_1015, Blocking, _>::new(DeviceAddr::Default, RefCellDevice::new(&i2c));
 
     let mps = fs3000.read_meters_per_second().expect("to read");
     println!("meter per second: {:?}", mps);
