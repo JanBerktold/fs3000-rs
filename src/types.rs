@@ -1,9 +1,12 @@
 /// Marker trait for FS3000 device types (1005 vs 1015).
 pub trait DeviceType: sealed::Sealed {
+    /// A series of datapoints to translate from the raw measurement (12-bit integer) to meters per second (f32).
     fn datapoints() -> &'static [(u16, f32)];
 }
 
+/// A marker trait to indicate that we're communicating with a 1005 variant.
 pub struct FS3000_1005;
+/// A marker trait to indicate that we're communicating with a 1015 variant.
 pub struct FS3000_1015;
 
 impl DeviceType for FS3000_1005 {
@@ -42,9 +45,23 @@ impl DeviceType for FS3000_1015 {
     }
 }
 
+/// A marker trait to indicate whether the client is blocking or async.
+pub trait ClientType: sealed::Sealed {}
+
+/// A marker trait to indicate that the client is blocking.
+pub struct Blocking;
+/// A marker trait to indicate that the client is async.
+pub struct Async;
+
+impl ClientType for Blocking {}
+impl ClientType for Async {}
+
 mod sealed {
     pub trait Sealed {}
 
     impl Sealed for super::FS3000_1005 {}
     impl Sealed for super::FS3000_1015 {}
+
+    impl Sealed for super::Blocking {}
+    impl Sealed for super::Async {}
 }

@@ -1,12 +1,12 @@
 //! A platform-agnostic, embedded-hal driver for FS3000 airflow sensors, either directly or via a [Sparkfun breakout board](https://www.sparkfun.com/products/18768).
 #![no_std]
-#[deny(missing_docs)]
+#![deny(missing_docs)]
+
 mod address;
 pub use address::DeviceAddr;
-mod client_type;
 mod protocol;
 mod types;
-pub use client_type::{Async, Blocking, ClientType};
+pub use types::{Async, Blocking, ClientType};
 
 use protocol::Packet;
 pub use types::{DeviceType, FS3000_1005, FS3000_1015};
@@ -17,11 +17,15 @@ pub mod prelude {
     pub use crate::{Async, Blocking, DeviceAddr, FS3000};
 }
 
+/// Any error that can occur when using this library.
 #[derive(Debug, thiserror::Error)]
 pub enum Error<I2CError> {
+    /// A packet was received from the FS3000 but it's checksum was invalid.
+    /// This typically indicates a faulty link or device.
     #[error("Checksum validation failed")]
     ChecksumFailed,
 
+    /// Any I2C error that occurs when communicating with the device.
     #[error("I2C Error: {0:?}")]
     I2C(I2CError),
 }
