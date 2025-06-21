@@ -19,6 +19,7 @@ pub mod prelude {
 
 /// Any error that can occur when using this library.
 #[derive(Debug, thiserror::Error)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Error<I2CError> {
     /// A packet was received from the FS3000 but it's checksum was invalid.
     /// This typically indicates a faulty link or device.

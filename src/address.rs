@@ -1,5 +1,6 @@
 /// The I2C address of the FS3000.
 #[derive(Copy, Clone, Debug, Default)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DeviceAddr {
     /// The default address, 0x28.
     #[default]
