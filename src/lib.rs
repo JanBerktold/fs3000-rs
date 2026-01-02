@@ -33,9 +33,14 @@ pub enum Error<I2CError> {
 
 /// A client for a FS3000 device via I2C.
 ///
-/// When creating this client, the consumer has two make decisions:
-///     - Is the connected device a FS3000-1005 or FS3000-1015? The latter can measure larger air velocitys.
-///     - Is the consuming code blocking or async?
+/// # Choosing a Client
+///
+/// When creating this client, you must decide:
+///
+/// - **Device type:**
+///   - Is the connected device a `FS3000-1005` or `FS3000-1015`? The latter can measure larger air velocities.
+/// - **Client type:**
+///   - Is the consuming code blocking or async?
 ///
 /// Both of these decisions are documented using marker traits.
 ///
@@ -60,7 +65,7 @@ pub enum Error<I2CError> {
 /// // In practice, you would create this [`embedded_hal::i2c::I2c`] via your platform hal.
 /// let blocking_bus = BlockingBus::default();
 ///
-/// // Assumes the FS3000-1015 (wider measurement range), substitute FS3000_
+/// // Assumes the FS3000-1015 (wider measurement range), substitute FS3000_1005 if needed.
 /// let mut client = FS3000::<FS3000_1015, Blocking, _>::new(DeviceAddr::default(), blocking_bus);
 ///
 /// let mps = client.read_meters_per_second()?;
