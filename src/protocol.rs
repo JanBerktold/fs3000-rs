@@ -33,11 +33,12 @@ impl Packet {
 pub(crate) fn raw_to_meters_per_second<D: DeviceType>(measurement: u16) -> f32 {
     let translation_points = D::datapoints();
 
-    // Get the lowest datapoint for which our measurement is higher.
+    // Get the lowest datapoint for which our measurement is equal or higher.
     let Some(index) = translation_points
         .iter()
         .enumerate()
-        .find(|(_, (raw, _))| measurement > *raw)
+        .rev()
+        .find(|(_, (raw, _))| measurement >= *raw)
         .map(|(index, _)| index)
     else {
         // If we're smaller than the first datapoint, then we can short-circuit and return 0.0.
@@ -68,6 +69,8 @@ pub(crate) fn raw_to_meters_per_second<D: DeviceType>(measurement: u16) -> f32 {
 
 #[cfg(test)]
 mod tests {
+    use crate::FS3000_1005;
+
     use super::*;
 
     // TODO: check for measurement
@@ -81,5 +84,34 @@ mod tests {
         // Example taking from the datasheet on page 10.
         let packet = Packet([0xCC, 0x01, 0x99, 0x01, 0x99]);
         assert!(packet.valid());
+    }
+
+    #[test]
+    fn test_raw_to_meters_per_second_1005() {
+        macro_rules! assert_with_error {
+            ($input:expr, $b:expr) => {
+                let result = raw_to_meters_per_second::<FS3000_1005>($input);
+                let diff = (result - $b).abs();
+                assert!(
+                    diff < 1e-3,
+                    "Expected {} and got {}, which differs by {} (allowed error 1e-3) for input {}",
+                    $b,
+                    result,
+                    diff,
+                    $input
+                );
+            };
+        }
+
+        // Use known datapoints for FS3000_1005
+        assert_with_error!(409, 0.0);
+        assert_with_error!(915, 1.07);
+        assert_with_error!(1522, 2.01);
+        assert_with_error!(3686, 7.23);
+
+        // Test interpolation between two points -- 50% between 915 and 1522.
+        let mid = (915 + 1522) / 2;
+        let expected = (1.07 + 2.01) / 2.0;
+        assert_with_error!(mid, expected);
     }
 }
