@@ -1,8 +1,8 @@
 [package]
 name = "fs3000-rs"
 description = "A platform-agnostic, embedded-hal driver for FS3000 airflow sensors."
-version.workspace = true
-edition.workspace = true
+version = "0.1.4"
+edition = "2021"
 license.workspace = true
 repository.workspace = true
 keywords = ["embedded", "async", "embedded-hal"]
