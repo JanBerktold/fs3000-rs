@@ -1,0 +1,27 @@
+[package]
+name = "fs3000-rs"
+description = "A platform-agnostic, embedded-hal driver for FS3000 airflow sensors."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords = ["embedded", "async", "embedded-hal"]
+
+[features]
+defmt = ["dep:defmt"]
+
+[dependencies]
+embedded-hal = "1.0.0"
+embedded-hal-async = "1.0.0"
+thiserror = { version = "2", default-features = false }
+defmt = { version = "1", optional = true }
+
+[dev-dependencies]
+ftdi-embedded-hal = { version = "0.23.2", features = ["libftd2xx"] }
+embedded-hal-bus = { version = "0.3", features = ["async"]}
+anyhow = "1"
+tokio-test = "0.4.4"
+
+# Local fork to add aarch64 support
+# [patch.crates-io]
+# libftd2xx-ffi = { path = "../libftd2xx-ffi" }
