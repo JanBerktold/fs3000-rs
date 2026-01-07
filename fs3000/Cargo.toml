@@ -17,7 +17,7 @@ thiserror = { version = "2", default-features = false }
 defmt = { version = "1", optional = true }
 
 [dev-dependencies]
-ftdi-embedded-hal = { version = "0.23.2", features = ["libftd2xx"] }
+ftdi-embedded-hal = { version = "0.24.0", features = ["libftd2xx"] }
 embedded-hal-bus = { version = "0.3", features = ["async"]}
 anyhow = "1"
 tokio-test = "0.4.4"
